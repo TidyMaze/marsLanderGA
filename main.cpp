@@ -48,10 +48,10 @@ const int WIDTH = 7000;
 const int HEIGHT = 3000;
 
 #if ENV == ENV_LOCAL
-const int POPULATION_SIZE = 500;
-const int DEPTH = 200;
-const double SELECTION_FACTOR = 0.08;
-const double ELITISM_FACTOR = 0.05;
+const int POPULATION_SIZE = 100;
+const int DEPTH = 50;
+const double SELECTION_FACTOR = 0.05;
+const double ELITISM_FACTOR = 0.03;
 const int FRAMERATE = 30;
 #endif
 
@@ -313,8 +313,8 @@ void updateRocket(int id){
     Vector acc = force(rockets[id].angle, rockets[id].thrust).plus(force(-90, GRAVITY_ACC));
     Coord loc = rockets[id].coord.plus(rockets[id].speed.plus(Vector(acc.x/2, acc.y/2)));
     Vector speed = rockets[id].speed.plus(acc);
-    speed.x = constrainDouble(round(speed.x), MIN_HSPEED, MAX_HSPEED);
-    speed.y = constrainDouble(round(speed.y), MIN_VSPEED, MAX_VSPEED);
+    speed.x = constrainDouble(speed.x, MIN_HSPEED, MAX_HSPEED);
+    speed.y = constrainDouble(speed.y, MIN_VSPEED, MAX_VSPEED);
     rockets[id].speed = speed;
     rockets[id].coord = loc;
 }
@@ -642,7 +642,7 @@ void mutate(int maxDepthYet, int nbElitism, int nbToCreate, int (&newChromosomes
     for (int i = 0; i < nbToCreate; i++) {
         for (int ig = 0; ig < DEPTH * 2; ig++) {
             int oldVal = newChromosomes[i + nbElitism][ig];
-            int chanceMut = ig >= maxDepthYet*2 ? 1000 : scale(ig,0,maxDepthYet*2,50,5);
+            int chanceMut = ig >= maxDepthYet*2 ? 1000 : scale(ig,0,maxDepthYet*2,200,5);
             if (random(1, chanceMut +1) == 1) {
                 bool plusOuMoins = randBool();
                 if (ig % 2 == 0) {
