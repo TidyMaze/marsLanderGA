@@ -25,7 +25,7 @@
 
 #define ENV_LOCAL 1
 #define ENV_CG 2
-#define ENV ENV_LOCAL
+#define ENV ENV_CG
 
 #if ENV == ENV_LOCAL
 #include <SDL2/SDL.h>
@@ -49,28 +49,28 @@ const int HEIGHT = 3000;
 
 #if ENV == ENV_LOCAL
 const int POPULATION_SIZE = 100;
-const int DEPTH = 50;
-const double SELECTION_FACTOR = 0.05;
-const double ELITISM_FACTOR = 0.03;
+const int DEPTH = 100;
+const double SELECTION_FACTOR = 0.02;
+const double ELITISM_FACTOR = 0.7;
 const int FRAMERATE = 30;
 #endif
 
 #if ENV == ENV_CG
 const int POPULATION_SIZE = 100;
-const int DEPTH = 70;
-const double SELECTION_FACTOR = 0.1;
-const double ELITISM_FACTOR = 0.08;
+const int DEPTH = 100;
+const double SELECTION_FACTOR = 0.02;
+const double ELITISM_FACTOR = 0.7;
 #endif
 
 const double GRAVITY_ACC = 3.711;
-const int MAX_LANDING_VSPEED = 40;
-const int MAX_LANDING_HSPEED = 20;
+const int MAX_LANDING_VSPEED = 40*95/100;
+const int MAX_LANDING_HSPEED = 20*95/100;
 const int MAX_VSPEED = 500;
 const int MIN_VSPEED = -500;
 const int MAX_HSPEED = 500;
 const int MIN_HSPEED = -500;
 
-const int STEPGRID = 35;
+const int STEPGRID = 30;
 const int nbCol = (int)ceil(WIDTH/STEPGRID);
 const int nbRow = (int)ceil(HEIGHT/STEPGRID);
 
@@ -146,7 +146,7 @@ void moveRocketOneTurn(int depthTurn, int i, int &maxDepthYet, bool &stillOneNot
 void mutate(int maxDepthYet, int nbElitism, int nbToCreate, int (&newChromosomes)[POPULATION_SIZE][DEPTH*2]);
 void crossover(int nbElitism, int nbSelection, int nbToCreate, int (&newChromosomes)[POPULATION_SIZE][DEPTH*2]);
 void elitism(int nbElitism, int (&newChromosomes)[POPULATION_SIZE][DEPTH*2]);
-int moveRocketsTillFixedState(int maxDepthYet);
+int moveRocketsTillFixedState();
 void createNextGeneration(int maxDepthYet, bool oneWinner);
 int countLanded(bool &oneWinner);
 void startTimer(chrono::time_point<chrono::system_clock> &dstart);
@@ -268,7 +268,7 @@ bool randBool(){
 void randomChromosome(int idChromosome){
     for(int d=0;d<DEPTH;d++){
         chromosomes[idChromosome][d*2] = random(0,180+1);
-        chromosomes[idChromosome][d*2+1] = random(3,4+1);
+        chromosomes[idChromosome][d*2+1] = random(4,4+1);
     }
 }
 
@@ -310,13 +310,15 @@ double constrainDouble(double value, double vmin, double vmax){
 
 void updateRocket(int id){
     rockets[id].pastCoord = rockets[id].coord;
-    Vector acc = force(rockets[id].angle, rockets[id].thrust).plus(force(-90, GRAVITY_ACC));
+    int realThrust = min(rockets[id].fuel, rockets[id].thrust);
+    Vector acc = force(-90, GRAVITY_ACC).plus(force(rockets[id].angle, realThrust));
     Coord loc = rockets[id].coord.plus(rockets[id].speed.plus(Vector(acc.x/2, acc.y/2)));
     Vector speed = rockets[id].speed.plus(acc);
     speed.x = constrainDouble(speed.x, MIN_HSPEED, MAX_HSPEED);
     speed.y = constrainDouble(speed.y, MIN_VSPEED, MAX_VSPEED);
     rockets[id].speed = speed;
     rockets[id].coord = loc;
+    rockets[id].fuel -= realThrust;
 }
 
 int scale(int value, int fromMin, int fromMax, int toMin, int toMax){
@@ -338,21 +340,25 @@ double eval(Rocket &rocket){
     if(rocket.over){
         if(rocket.inTarget){
             total += 100000;
+
+            total -= abs(90 - rocket.angle) * abs(90 - rocket.angle) * 800;
+
+            double absX = abs(rocket.speed.x);
+            int diffVSpeed = (int) round(abs(rocket.speed.y < -MAX_LANDING_VSPEED ? rocket.speed.y + MAX_LANDING_VSPEED : 0));
+            int diffHSpeed = (int) round(absX > MAX_LANDING_HSPEED ? absX - MAX_LANDING_HSPEED : 0);
+
+            total -= diffVSpeed * diffVSpeed * 200;
+            total -= diffHSpeed * diffHSpeed * 200;
+
         } else {
             total -= 100000;
         }
     }
 
-    total -= abs(90 - rocket.angle) * 200;
+    if(!rocket.inTarget) {
+        total -= gridDist[rY][rX] * gridDist[rY][rX];
+    }
 
-    double absX = abs(rocket.speed.x);
-    int diffVSpeed = (int) round(abs(rocket.speed.y < -MAX_LANDING_VSPEED ? rocket.speed.y + MAX_LANDING_VSPEED : 0));
-    int diffHSpeed = (int) round(absX > MAX_LANDING_HSPEED ? absX - MAX_LANDING_HSPEED : 0);
-
-    total -= diffVSpeed * diffVSpeed * 200;
-    total -= diffHSpeed * diffHSpeed * 200;
-
-    if(!rocket.inTarget) total -= gridDist[rY][rX];
     return total;
 }
 
@@ -517,9 +523,9 @@ int main(int argc, char** argv)
 #if ENV == ENV_LOCAL
         initialSpeedX = 0;
         initialSpeedY = 0;
-        initialFuel = 10000;
+        initialFuel = 1000;
         initialAngle = 90;
-        initialPower = 4;
+        initialPower = 0;
 #endif
 
         generateRocketsAndInitialChromosomes();
@@ -527,13 +533,14 @@ int main(int argc, char** argv)
         int maxDepthYet = 0;
         bool keep = true;
         bool oneWinner = false;
-        for(int numGen=0;!quit && keep;numGen++){
+        int numGen;
+        for(numGen=0;!quit && keep;numGen++){
 
 #if ENV == ENV_LOCAL
             trajectories.clear();
             handleEvents();
 #endif
-            maxDepthYet = moveRocketsTillFixedState(maxDepthYet);
+            maxDepthYet = moveRocketsTillFixedState();
             evalAllRockets();
             sortRockets();
 #if ENV == ENV_CG
@@ -549,11 +556,12 @@ int main(int argc, char** argv)
             if(getTimerElapsedMs(lastSeen) >= 1.0/FRAMERATE*1000) {
                 showInWIndow();
                 startTimer(lastSeen);
-                cerr << "Done gen " << numGen << " succes : " << cntLanded*100.0/POPULATION_SIZE << "%" << endl;
+                //cerr << "Done gen " << numGen << " succes : " << cntLanded*100.0/POPULATION_SIZE << "%" << endl;
             }
 #endif
         }
         printTimer(dstart);
+        cerr << "nbGen : " << numGen << endl;
 #if ENV == ENV_CG
         cout << (bestAngleSoFar-90) << ' ' << bestThrustSoFar << endl;
 #endif
@@ -578,7 +586,7 @@ int countLanded(bool &oneWinner) {
            && rockets[i].speed.y >= -MAX_LANDING_VSPEED){
             // found it !
             count++;
-            oneWinner = true;
+            //oneWinner = true;
         }
     }
     return count;
@@ -588,6 +596,11 @@ void createNextGeneration(int maxDepthYet, bool oneWinner) {
     int nbElitism = (int)floor(POPULATION_SIZE * ELITISM_FACTOR);
     int nbSelection = (int)floor(POPULATION_SIZE * SELECTION_FACTOR);
     int nbToCreate = (int)floor(POPULATION_SIZE * (1-ELITISM_FACTOR));
+
+//    int nbElitism = 8;
+//    int nbSelection = 8;
+//    int nbToCreate = POPULATION_SIZE - nbElitism;
+
     assert((nbElitism + nbToCreate) == POPULATION_SIZE);
 
     int newChromosomes[POPULATION_SIZE][DEPTH * 2];
@@ -606,15 +619,16 @@ void createNextGeneration(int maxDepthYet, bool oneWinner) {
     copy(&newChromosomes[0][0], &newChromosomes[0][0]+POPULATION_SIZE*DEPTH*2,&chromosomes[0][0]);
 }
 
-int moveRocketsTillFixedState(int maxDepthYet) {
+int moveRocketsTillFixedState() {
+    int newMaxDepthYet = 0;
     bool stillOneNotOver = false;
     for(int depthTurn=0;depthTurn<DEPTH;depthTurn++){
         for(int i=0;i<POPULATION_SIZE;i++){
-            moveRocketOneTurn(depthTurn, i, maxDepthYet, stillOneNotOver);
+            moveRocketOneTurn(depthTurn, i, newMaxDepthYet, stillOneNotOver);
         }
         if(!stillOneNotOver) break;
     }
-    return maxDepthYet;
+    return newMaxDepthYet;
 }
 
 void elitism(int nbElitism, int(&newChromosomes)[POPULATION_SIZE][DEPTH*2]) {
@@ -639,10 +653,11 @@ void crossover(int nbElitism, int nbSelection, int nbToCreate, int (&newChromoso
 }
 
 void mutate(int maxDepthYet, int nbElitism, int nbToCreate, int (&newChromosomes)[POPULATION_SIZE][DEPTH*2]) {
+    //cerr << "mdy : " << maxDepthYet << endl;
     for (int i = 0; i < nbToCreate; i++) {
         for (int ig = 0; ig < DEPTH * 2; ig++) {
             int oldVal = newChromosomes[i + nbElitism][ig];
-            int chanceMut = ig >= maxDepthYet*2 ? 1000 : scale(ig,0,maxDepthYet*2,200,5);
+            int chanceMut = ig >= maxDepthYet*2 ? 2 : scale(ig,0,maxDepthYet*2,50,2);
             if (random(1, chanceMut +1) == 1) {
                 bool plusOuMoins = randBool();
                 if (ig % 2 == 0) {
@@ -651,7 +666,7 @@ void mutate(int maxDepthYet, int nbElitism, int nbToCreate, int (&newChromosomes
                     newChromosomes[i + nbElitism][ig] = constrainInt(plusOuMoins ? oldVal + offset : oldVal - offset, 0, 180);
                 } else {
                     // thrust
-                    newChromosomes[i + nbElitism][ig] = constrainInt(plusOuMoins ? oldVal + 1 : oldVal - 1, 3, 4);
+                    newChromosomes[i + nbElitism][ig] = constrainInt(plusOuMoins ? oldVal + 1 : oldVal - 1, 4, 4);
                 }
             }
         }
@@ -706,6 +721,10 @@ void handleEvents() {
     while(SDL_PollEvent(&event)) {
         if( event.type == SDL_QUIT ) quit = true;
     }
+    int x, y;
+    SDL_GetMouseState(&x, &y);
+    initialX = scale(x, 0,WINDOW_WIDTH-1, 0, WIDTH-1);
+    initialY = scale(y, 0,WINDOW_HEIGHT-1, HEIGHT-1, 0);
 }
 
 void initWindow() {
@@ -738,7 +757,8 @@ void showInWIndow() {
 
     for (int i = 0; i < nbRow; i++) {
         for (int j = 0; j < nbCol; j++) {
-            int alpha = scale(gridDist[i][j], 0, max(nbRow, nbCol), 100, 0);
+            int alpha = scale(gridDist[i][j], 0, max(nbRow, nbCol), 255, 0);
+            alpha = alpha/15*15;
             if (gridAccess[i][j]) {
                 SDL_SetRenderDrawColor(renderer, 0, 255, 0, (Uint8) alpha);
             } else {
@@ -760,7 +780,7 @@ void showInWIndow() {
         drawLine(l.from.x, l.from.y, l.to.x, l.to.y);
     }
 
-    SDL_SetRenderDrawColor(renderer, 255, 255, 0, 5);
+    SDL_SetRenderDrawColor(renderer, 0, 0, 255, 5);
     for (Line &l : trajectories) {
         drawLine(l.from.x, l.from.y, l.to.x, l.to.y);
     }
