@@ -49,7 +49,7 @@ const int HEIGHT = 3000;
 
 #if ENV == ENV_LOCAL
 const int POPULATION_SIZE = 100;
-const int DEPTH = 100;
+const int DEPTH = 200;
 const double SELECTION_FACTOR = 0.1;
 const double ELITISM_FACTOR = 0.1;
 const int FRAMERATE = 30;
@@ -57,7 +57,7 @@ const int FRAMERATE = 30;
 
 #if ENV == ENV_CG
 const int POPULATION_SIZE = 100;
-const int DEPTH = 100;
+const int DEPTH = 200;
 const double SELECTION_FACTOR = 0.1;
 const double ELITISM_FACTOR = 0.1;
 #endif
@@ -757,7 +757,7 @@ void showInWIndow() {
 
     for (int i = 0; i < nbRow; i++) {
         for (int j = 0; j < nbCol; j++) {
-            int alpha = scale(gridDist[i][j], 0, max(nbRow, nbCol), 255, 0);
+            int alpha = scale(gridDist[i][j], 0, max(nbRow, nbCol), 200, 0);
             alpha = alpha/15*15;
             if (gridAccess[i][j]) {
                 SDL_SetRenderDrawColor(renderer, 0, 255, 0, (Uint8) alpha);
@@ -780,7 +780,7 @@ void showInWIndow() {
         drawLine(l.from.x, l.from.y, l.to.x, l.to.y);
     }
 
-    SDL_SetRenderDrawColor(renderer, 0, 0, 255, 5);
+    SDL_SetRenderDrawColor(renderer, 0, 0, 255, 20);
     for (Line &l : trajectories) {
         drawLine(l.from.x, l.from.y, l.to.x, l.to.y);
     }
