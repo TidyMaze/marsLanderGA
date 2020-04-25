@@ -449,7 +449,7 @@ void computeDistances(){
         std::list<Coord>::iterator minIt;
         list<Coord>::iterator end = q.end();
         for (std::list<Coord>::iterator it=q.begin(); it != end; ++it){
-            Coord uTmp = *it;
+            Coord &uTmp = *it;
             int tmpDst = gridDist[uTmp.y][uTmp.x];
             if (tmpDst < minDist) {
                 minDist = tmpDst;
