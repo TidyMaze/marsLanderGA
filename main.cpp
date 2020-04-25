@@ -70,7 +70,7 @@ const int MIN_VSPEED = -500;
 const int MAX_HSPEED = 500;
 const int MIN_HSPEED = -500;
 
-const int STEPGRID = 30;
+const int STEPGRID = 100;
 constexpr int nbCol = (int)WIDTH/STEPGRID;
 constexpr int nbRow = (int)HEIGHT/STEPGRID;
 
@@ -391,7 +391,7 @@ double eval(Rocket &rocket){
             total -= diffHSpeed * diffHSpeed * 200;
 
             if(diffVSpeed == 0 && diffHSpeed == 0){
-              total += rocket.fuel;
+              total += rocket.fuel*rocket.fuel;
             }
         } else {
             total -= 100000;
@@ -701,7 +701,7 @@ void mutate(int maxDepthYet, int nbElitism, int nbToCreate, int (&newChromosomes
     for (int i = 0; i < nbToCreate; i++) {
         for (int ig = 0; ig < DEPTH * 2; ig++) {
             int oldVal = newChromosomes[i + nbElitism][ig];
-            int chanceMut = ig >= maxDepthYet*2 ? 2 : scale(ig,0,maxDepthYet*2,50,2);
+            int chanceMut = 50;
             if (random(1, chanceMut +1) == 1) {
                 bool plusOuMoins = randBool();
                 if (ig % 2 == 0) {
