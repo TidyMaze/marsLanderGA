@@ -63,8 +63,8 @@ const double ELITISM_FACTOR = 0.1;
 #endif
 
 const double GRAVITY_ACC = 3.711;
-const int MAX_LANDING_VSPEED = 40*95/100;
-const int MAX_LANDING_HSPEED = 20*95/100;
+const int MAX_LANDING_VSPEED = 40*99/100;
+const int MAX_LANDING_HSPEED = 20*99/100;
 const int MAX_VSPEED = 500;
 const int MIN_VSPEED = -500;
 const int MAX_HSPEED = 500;
@@ -447,7 +447,8 @@ void computeDistances(){
         Coord u;
         int minDist = std::numeric_limits<int>::max();
         std::list<Coord>::iterator minIt;
-        for (std::list<Coord>::iterator it=q.begin(); it != q.end(); ++it){
+        list<Coord>::iterator end = q.end();
+        for (std::list<Coord>::iterator it=q.begin(); it != end; ++it){
             Coord uTmp = *it;
             int tmpDst = gridDist[uTmp.y][uTmp.x];
             if (tmpDst < minDist) {
