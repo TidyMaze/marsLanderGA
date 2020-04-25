@@ -41,7 +41,7 @@ const int MAX_TURN_MS = 100;
 
 #if ENV == ENV_LOCAL
 const int WINDOW_WIDTH = 1000;
-const int WINDOW_HEIGHT = 1000;
+const int WINDOW_HEIGHT = 800;
 #endif
 
 const int WIDTH = 7000;
