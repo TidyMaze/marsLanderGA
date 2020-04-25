@@ -48,8 +48,8 @@ const int WIDTH = 7000;
 const int HEIGHT = 3000;
 
 #if ENV == ENV_LOCAL
-const int POPULATION_SIZE = 100;
-const int DEPTH = 200;
+const int POPULATION_SIZE = 200;
+const int DEPTH = 300;
 const double SELECTION_FACTOR = 0.1;
 const double ELITISM_FACTOR = 0.1;
 const int FRAMERATE = 30;
@@ -344,8 +344,8 @@ double eval(Rocket &rocket){
             total -= abs(90 - rocket.angle) * abs(90 - rocket.angle) * 800;
 
             double absX = abs(rocket.speed.x);
-            int diffVSpeed = (int) round(abs(rocket.speed.y < -MAX_LANDING_VSPEED ? rocket.speed.y + MAX_LANDING_VSPEED : 0));
-            int diffHSpeed = (int) round(absX > MAX_LANDING_HSPEED ? absX - MAX_LANDING_HSPEED : 0);
+            int diffVSpeed = (int) ceil(abs(rocket.speed.y < -MAX_LANDING_VSPEED ? rocket.speed.y + MAX_LANDING_VSPEED : 0));
+            int diffHSpeed = (int) ceil(absX > MAX_LANDING_HSPEED ? absX - MAX_LANDING_HSPEED : 0);
 
             total -= diffVSpeed * diffVSpeed * 200;
             total -= diffHSpeed * diffHSpeed * 200;
@@ -787,7 +787,7 @@ void showInWIndow() {
         drawLine(l.from.x, l.from.y, l.to.x, l.to.y);
     }
 
-    SDL_SetRenderDrawColor(renderer, 0, 0, 255, 20);
+    SDL_SetRenderDrawColor(renderer, 0, 0, 255, 10);
     for (Line &l : trajectories) {
         drawLine(l.from.x, l.from.y, l.to.x, l.to.y);
     }
