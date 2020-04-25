@@ -723,8 +723,15 @@ void handleEvents() {
     }
     int x, y;
     SDL_GetMouseState(&x, &y);
-    initialX = scale(x, 0,WINDOW_WIDTH-1, 0, WIDTH-1);
-    initialY = scale(y, 0,WINDOW_HEIGHT-1, HEIGHT-1, 0);
+    int nInitialX = scale(x, 0,WINDOW_WIDTH-1, 0, WIDTH-1);
+    int nInitialY = scale(y, 0,WINDOW_HEIGHT-1, HEIGHT-1, 0);
+
+    if(nInitialX != initialX || nInitialY != initialY){
+      generateRocketsAndInitialChromosomes();
+    }
+
+    initialX = nInitialX;
+    initialY = nInitialY;
 }
 
 void initWindow() {
