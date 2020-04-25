@@ -1,0 +1,6 @@
+.idea/codeStyles/
+CMakeCache.txt
+CMakeFiles/
+Makefile
+cmake_install.cmake
+marsLander

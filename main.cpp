@@ -25,7 +25,7 @@
 
 #define ENV_LOCAL 1
 #define ENV_CG 2
-#define ENV ENV_CG
+#define ENV ENV_LOCAL
 
 #if ENV == ENV_LOCAL
 #include <SDL2/SDL.h>
@@ -40,8 +40,8 @@ const int MAX_TURN_MS = 100;
 #endif
 
 #if ENV == ENV_LOCAL
-const int WINDOW_WIDTH = 600;
-const int WINDOW_HEIGHT = 600;
+const int WINDOW_WIDTH = 1000;
+const int WINDOW_HEIGHT = 1000;
 #endif
 
 const int WIDTH = 7000;
@@ -50,16 +50,16 @@ const int HEIGHT = 3000;
 #if ENV == ENV_LOCAL
 const int POPULATION_SIZE = 100;
 const int DEPTH = 100;
-const double SELECTION_FACTOR = 0.02;
-const double ELITISM_FACTOR = 0.7;
+const double SELECTION_FACTOR = 0.1;
+const double ELITISM_FACTOR = 0.1;
 const int FRAMERATE = 30;
 #endif
 
 #if ENV == ENV_CG
 const int POPULATION_SIZE = 100;
 const int DEPTH = 100;
-const double SELECTION_FACTOR = 0.02;
-const double ELITISM_FACTOR = 0.7;
+const double SELECTION_FACTOR = 0.1;
+const double ELITISM_FACTOR = 0.1;
 #endif
 
 const double GRAVITY_ACC = 3.711;
@@ -71,8 +71,8 @@ const int MAX_HSPEED = 500;
 const int MIN_HSPEED = -500;
 
 const int STEPGRID = 30;
-const int nbCol = (int)ceil(WIDTH/STEPGRID);
-const int nbRow = (int)ceil(HEIGHT/STEPGRID);
+constexpr int nbCol = (int)WIDTH/STEPGRID;
+constexpr int nbRow = (int)HEIGHT/STEPGRID;
 
 static const char *const TITLE = "Mars Lander simulator - Yann Rolland - 2016";
 
