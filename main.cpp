@@ -115,6 +115,16 @@ public:
     double x, y;
 };
 
+class Line;
+
+class BoundingBox {
+public:
+  Coord from, to;
+  BoundingBox();
+  BoundingBox(const Coord &from, const Coord &to);
+  BoundingBox(const Line &line);
+};
+
 class Line {
 public:
     Line();
@@ -123,6 +133,7 @@ public:
     bool isHorizontal() const;
     Coord mid() const;
     Coord from, to;
+    BoundingBox boundingBox;
 };
 
 class Rocket {
@@ -199,9 +210,36 @@ Coord Coord::times(double nb) {
 
 Line::Line(): from(Coord()), to(Coord()) {}
 
-Line::Line(const Coord &from, const Coord &to): from(from), to(to) {}
+Line::Line(const Coord &from, const Coord &to): 
+  from(from), 
+  to(to), 
+  boundingBox(BoundingBox(Coord(min(this->from.x, this->to.x), min(this->from.y, this->to.y)), Coord(max(this->from.x, this->to.x), max(this->from.y, this->to.y)))) {}
 
-bool Line::collides(const Line &line) const{
+BoundingBox::BoundingBox(): from(Coord()), to(Coord()) {
+}
+
+BoundingBox::BoundingBox(const Coord &from, const Coord &to):
+  from(Coord(min(from.x, to.x), min(from.y, to.y))),
+  to(Coord(max(from.x, to.x), max(from.y, to.y))) {
+}
+
+BoundingBox::BoundingBox(const Line &from):
+  from(Coord(min(this->from.x, this->to.x), min(this->from.y, this->to.y))),
+  to(Coord(max(this->from.x, this->to.x), max(this->from.y, this->to.y))) {
+  }
+
+bool Line::collides(const Line &line) const {
+
+    const BoundingBox *a = &this->boundingBox;
+    const BoundingBox *b = &line.boundingBox;
+
+    if(!(a->from.x <= b->to.x
+        && a->to.x >= b->from.x
+        && a->from.y <= b->to.y
+        && a->to.y >= b->from.y)){
+      return false;
+    }
+
     double p0_x = this->from.x;
     double p0_y = this->from.y;
     double p1_x = this->to.x;
@@ -210,8 +248,10 @@ bool Line::collides(const Line &line) const{
     double s1_y = p1_y - p0_y;
     double s2_x = line.to.x - line.from.x;
     double s2_y = line.to.y - line.from.y;
-    double s = (-s1_y * (p0_x - line.from.x) + s1_x * (p0_y - line.from.y)) / (-s2_x * s1_y + s1_x * s2_y);
-    double t = ( s2_x * (p0_y - line.from.y) - s2_y * (p0_x - line.from.x)) / (-s2_x * s1_y + s1_x * s2_y);
+    double s3_x = (p0_x - line.from.x);
+    double s3_y = (p0_y - line.from.y); 
+    double s = (-s1_y * s3_x + s1_x * s3_y) / (-s2_x * s1_y + s1_x * s2_y);
+    double t = ( s2_x * s3_y - s2_y * s3_x) / (-s2_x * s1_y + s1_x * s2_y);
     return (s >= 0 && s <= 1 && t >= 0 && t <= 1);
 }
 
