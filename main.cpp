@@ -350,6 +350,9 @@ double eval(Rocket &rocket){
             total -= diffVSpeed * diffVSpeed * 200;
             total -= diffHSpeed * diffHSpeed * 200;
 
+            if(diffVSpeed == 0 && diffHSpeed == 0){
+              total += rocket.fuel;
+            }
         } else {
             total -= 100000;
         }
