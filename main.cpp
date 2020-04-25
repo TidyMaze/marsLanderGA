@@ -322,7 +322,7 @@ void generateRocketsAndInitialChromosomes(){
 bool collisionGround(int id){
     Line moveLine = Line(rockets[id].pastCoord, rockets[id].coord);
     for(int numLL=0;numLL<landLines.size();numLL++){
-        Line currentLL = landLines[numLL];
+        Line &currentLL = landLines[numLL];
         if(currentLL.collides(moveLine)){
             rockets[id].inTarget = currentLL.isHorizontal();
             return true;
